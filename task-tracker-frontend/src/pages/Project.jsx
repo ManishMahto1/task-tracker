@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
-import axios from 'axios';
+import useApi from '../api/api';
 
 const Project = () => {
   const { id } = useParams();
@@ -13,21 +13,22 @@ const Project = () => {
     status: 'To Do',
     priority: 'Medium',
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState([]);
+  const { get, post, put, del } = useApi();
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/tasks/project/${id}`, {
-          headers: { 'x-auth-token': token },
-        });
-        setTasks(res.data);
+        const data = await get(`/tasks/project/${id}`);
+        setTasks(data);
       } catch (err) {
-        setError(err.response?.data?.msg || 'Error fetching tasks');
+        setErrors(Array.isArray(err) ? err : ['Failed to fetch tasks']);
       }
     };
-    fetchTasks();
-  }, [id, token]);
+    if (token && id) {
+      fetchTasks();
+    }
+  }, [id, token, get]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -36,44 +37,45 @@ const Project = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        'http://localhost:5000/api/tasks',
-        { ...formData, projectId: id },
-        { headers: { 'x-auth-token': token } }
-      );
-      setTasks([...tasks, res.data]);
+      const task = await post('/tasks', { ...formData, projectId: id });
+      setTasks([...tasks, task]);
       setFormData({ title: '', description: '', status: 'To Do', priority: 'Medium' });
+      setErrors([]);
     } catch (err) {
-      setError(err.response?.data?.msg || 'Error creating task');
+      setErrors(Array.isArray(err) ? err : ['Failed to create task']);
     }
   };
 
   const handleUpdate = async (taskId, updates) => {
     try {
-      const res = await axios.put(`http://localhost:5000/api/tasks/${taskId}`, updates, {
-        headers: { 'x-auth-token': token },
-      });
-      setTasks(tasks.map((task) => (task._id === taskId ? res.data : task)));
+      const updatedTask = await put(`/tasks/${taskId}`, updates);
+      setTasks(tasks.map((task) => (task._id === taskId ? updatedTask : task)));
+      setErrors([]);
     } catch (err) {
-      setError(err.response?.data?.msg || 'Error updating task');
+      setErrors(Array.isArray(err) ? err : ['Failed to update task']);
     }
   };
 
   const handleDelete = async (taskId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/tasks/${taskId}`, {
-        headers: { 'x-auth-token': token },
-      });
+      await del(`/tasks/${taskId}`);
       setTasks(tasks.filter((task) => task._id !== taskId));
+      setErrors([]);
     } catch (err) {
-      setError(err.response?.data?.msg || 'Error deleting task');
+      setErrors(Array.isArray(err) ? err : ['Failed to delete task']);
     }
   };
 
   return (
     <div className="container mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Project Tasks</h2>
-      {error && <p className="text-red-500">{error}</p>}
+      {errors.length > 0 && (
+        <ul className="text-red-500 mb-4">
+          {errors.map((error, index) => (
+            <li key={index}>{error}</li>
+          ))}
+        </ul>
+      )}
       <h3 className="text-xl mb-2">Create Task</h3>
       <form onSubmit={handleSubmit} className="max-w-md mb-8">
         <div className="mb-4">

@@ -1,8 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
-import axios from 'axios';
-const API_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:5000';
+import useApi from '../api/api';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +11,7 @@ const Login = () => {
   const [errors, setErrors] = useState([]);
   const { setAuthToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { post } = useApi();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,15 +20,13 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API_URL}/api/auth/login`, formData);
-      setAuthToken(res.data.token);
+      const response = await post('/auth/login', formData);
+      setAuthToken(response.token);
+      setErrors([]);
       navigate('/dashboard');
     } catch (err) {
-      if (err.response?.data?.errors) {
-        setErrors(err.response.data.errors.map((error) => error.msg));
-      } else {
-        setErrors(['Failed to connect to the server. Please ensure the backend is running.']);
-      }
+      console.log('Login Error:', err);
+      setErrors(Array.isArray(err) ? err : ['Failed to login']);
     }
   };
 

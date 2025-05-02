@@ -1,9 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:5000';
+import useApi from '../api/api';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -12,9 +10,10 @@ const Signup = () => {
     name: '',
     country: '',
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState([]);
   const { setAuthToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { post } = useApi();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,18 +22,24 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API_URL}/api/auth/signup`, formData);
-      setAuthToken(res.data.token);
+      const response = await post('/auth/signup', formData);
+      setAuthToken(response.token);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.msg || 'Failed to connect to the server. Please ensure the backend is running.');
+      setErrors(err);
     }
   };
 
   return (
     <div className="container mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Signup</h2>
-      {error && <p className="text-red-500">{error}</p>}
+      {errors.length > 0 && (
+        <ul className="text-red-500 mb-4">
+          {errors.map((error, index) => (
+            <li key={index}>{error}</li>
+          ))}
+        </ul>
+      )}
       <form onSubmit={handleSubmit} className="max-w-md">
         <div className="mb-4">
           <label className="block mb-1">Email</label>
