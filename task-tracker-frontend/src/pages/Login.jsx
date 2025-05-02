@@ -9,6 +9,7 @@ const Login = () => {
     password: '',
   });
   const [errors, setErrors] = useState([]);
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
   const { setAuthToken } = useContext(AuthContext);
   const navigate = useNavigate();
   const { post } = useApi();
@@ -19,6 +20,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // Start loading
     try {
       const response = await post('/auth/login', formData);
       setAuthToken(response.token);
@@ -27,6 +29,8 @@ const Login = () => {
     } catch (err) {
       console.log('Login Error:', err);
       setErrors(Array.isArray(err) ? err : ['Failed to login']);
+    } finally {
+      setIsLoading(false); // Stop loading in any case
     }
   };
 
@@ -63,8 +67,41 @@ const Login = () => {
             required
           />
         </div>
-        <button type="submit" className="bg-blue-600 text-white p-2 rounded">
-          Login
+        <button
+          type="submit"
+          className={`bg-blue-600 text-white p-2 rounded w-full flex justify-center items-center ${
+            isLoading ? 'opacity-75' : ''
+          }`}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              {/* Cool spinner SVG */}
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Processing...
+            </>
+          ) : (
+            'Login'
+          )}
         </button>
       </form>
     </div>
