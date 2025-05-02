@@ -13,7 +13,7 @@ const app = express();
 
 
  // Middleware
- const allowedOrigins = ['http://localhost:5173', 'https://task-tracker-two-snowy.vercel.app/']; // Replace with your frontend's *exact* origin(s)
+/*  const allowedOrigins = ['http://localhost:5173', 'https://task-tracker-two-snowy.vercel.app']; // Replace with your frontend's *exact* origin(s)
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) { // Check if the origin is in the allowed list
@@ -24,7 +24,12 @@ app.use(cors({
     },
     credentials: true // This is essential for requests with credentials
 })); 
+ */
 
+app.use(cors({
+    origin: 'https://task-tracker-two-snowy.vercel.app', // Your frontend URL
+    credentials: true,
+  }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 app.use(express.json());
 app.use(bodyParser.json()); // Parses JSON requests
