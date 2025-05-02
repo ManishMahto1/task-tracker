@@ -6,11 +6,12 @@ const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const taskRoutes = require('./routes/tasks');
 const bodyParser = require('body-parser');
+const rateLimit = require('express-rate-limit');
 dotenv.config();
 
 const app = express();
 
-// Middleware
+
  // Middleware
  const allowedOrigins = ['http://localhost:5173', 'https://task-tracker-two-snowy.vercel.app/']; // Replace with your frontend's *exact* origin(s)
 app.use(cors({
@@ -23,7 +24,8 @@ app.use(cors({
     },
     credentials: true // This is essential for requests with credentials
 })); 
- 
+
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 app.use(express.json());
 app.use(bodyParser.json()); // Parses JSON requests
 app.use(bodyParser.urlencoded({ extended: true })); // Parses URL-encoded requests
